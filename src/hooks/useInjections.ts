@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
-import type { Injection, InjectionSite } from "../types";
+import type { Injection, InjectionSite, ImportConflict, ImportResult } from "../types";
 
 const STORAGE_KEY = "injection-tracker-data";
 
@@ -57,10 +57,9 @@ export function useInjections() {
   }, []);
 
   const add = useCallback(
-    (site: InjectionSite): void => {
-      const today = getTodayDate();
+    (site: InjectionSite, date?: string, id?: string): void => {
       const current = getStoredInjections();
-      const entry: Injection = { id: generateId(), date: today, site };
+      const entry: Injection = { id: id ?? generateId(), date: date ?? getTodayDate(), site };
       saveInjections([...current, entry]);
     },
     []
@@ -82,7 +81,7 @@ export function useInjections() {
     return JSON.stringify(getStoredInjections(), null, 2);
   }, []);
 
-  const importData = useCallback((json: string): { error?: string; count?: number } => {
+  const importData = useCallback((json: string): ImportResult => {
     try {
       const parsed = JSON.parse(json);
       if (!Array.isArray(parsed)) return { error: "Invalid format: expected an array" };
@@ -91,12 +90,47 @@ export function useInjections() {
           return { error: "Invalid format: each entry needs id, date, and site" };
         }
       }
-      saveInjections(parsed);
-      return { count: parsed.length };
+
+      const current = getStoredInjections();
+      const currentByDate = new Map<string, Injection>();
+      for (const entry of current) {
+        currentByDate.set(entry.date, entry);
+      }
+
+      let added = 0;
+      let skipped = 0;
+      const conflicts: ImportConflict[] = [];
+      const toAdd: Injection[] = [];
+
+      for (const imported of parsed as Injection[]) {
+        const existing = currentByDate.get(imported.date);
+        if (!existing) {
+          toAdd.push(imported);
+          added++;
+        } else if (existing.site === imported.site) {
+          skipped++;
+        } else {
+          conflicts.push({ date: imported.date, current: existing, imported });
+        }
+      }
+
+      if (toAdd.length > 0) {
+        saveInjections([...current, ...toAdd]);
+      }
+
+      return { added, skipped, conflicts };
     } catch {
       return { error: "Invalid JSON" };
     }
   }, []);
 
-  return { injections: sorted, latest, checkDuplicate, add, update, remove, exportData, importData };
+  const resolveConflict = useCallback((date: string, keepImported: boolean, imported: Injection) => {
+    const current = getStoredInjections();
+    if (keepImported) {
+      saveInjections(current.map((i) => i.date === date ? { ...i, site: imported.site } : i));
+    }
+    // If keeping current, no change needed
+  }, []);
+
+  return { injections: sorted, latest, checkDuplicate, add, update, remove, exportData, importData, resolveConflict };
 }

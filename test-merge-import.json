@@ -1,0 +1,10 @@
+[
+  { "id": "merge-test-01", "date": "2025-09-04", "site": "right" },
+  { "id": "merge-test-02", "date": "2025-09-11", "site": "left" },
+  { "id": "merge-test-03", "date": "2025-09-18", "site": "left" },
+  { "id": "merge-test-04", "date": "2025-10-03", "site": "left" },
+  { "id": "merge-test-05", "date": "2025-10-24", "site": "right" },
+  { "id": "merge-test-06", "date": "2026-04-01", "site": "right" },
+  { "id": "merge-test-07", "date": "2026-04-08", "site": "left" },
+  { "id": "merge-test-08", "date": "2026-04-15", "site": "right" }
+]

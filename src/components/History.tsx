@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import type { Injection, InjectionSite } from "../types";
+import { useCallback, useRef, useState } from "react";
+import type { Injection, InjectionSite, ImportConflict } from "../types";
 import { useInjections } from "../hooks/useInjections";
 
 function formatDate(dateStr: string): string {
@@ -127,9 +127,12 @@ function EditRow({
 }
 
 export default function History() {
-  const { injections, update, remove, exportData, importData } = useInjections();
+  const { injections, update, remove, add: addEntry, exportData, importData, resolveConflict } = useInjections();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [importMessage, setImportMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const [conflicts, setConflicts] = useState<ImportConflict[]>([]);
+  const [toast, setToast] = useState<{ message: string; undo?: () => void } | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleExport() {
@@ -148,12 +151,20 @@ export default function History() {
     if (!file) return;
     try {
       const text = await file.text();
-      const { error, count } = importData(text);
-      if (error) {
-        setImportMessage({ text: error, isError: true });
+      const result = importData(text);
+      if (result.error) {
+        setImportMessage({ text: result.error, isError: true });
       } else {
-        setImportMessage({ text: `Imported ${count} entries`, isError: false });
-        setTimeout(() => setImportMessage(null), 5000);
+        const parts: string[] = [];
+        if (result.added) parts.push(`${result.added} added`);
+        if (result.skipped) parts.push(`${result.skipped} skipped`);
+        if (result.conflicts?.length) parts.push(`${result.conflicts.length} conflict${result.conflicts.length > 1 ? "s" : ""}`);
+        setImportMessage({ text: parts.join(", ") || "No changes", isError: false });
+        if (result.conflicts?.length) {
+          setConflicts(result.conflicts);
+        } else {
+          setTimeout(() => setImportMessage(null), 5000);
+        }
       }
     } catch (err) {
       setImportMessage({ text: `Failed to read file: ${err}`, isError: true });
@@ -161,14 +172,35 @@ export default function History() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  function handleResolveConflict(conflict: ImportConflict, keepImported: boolean) {
+    resolveConflict(conflict.date, keepImported, conflict.imported);
+    const remaining = conflicts.filter((c) => c.date !== conflict.date);
+    setConflicts(remaining);
+    if (remaining.length === 0) {
+      setImportMessage(null);
+    }
+  }
+
+  const showToast = useCallback((message: string, undo?: () => void) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ message, undo });
+    toastTimerRef.current = setTimeout(() => setToast(null), undo ? 5000 : 3000);
+  }, []);
+
   function handleSave(id: string, updates: Partial<Omit<Injection, "id">>) {
     update(id, updates);
     setEditingId(null);
+    showToast("Entry updated");
   }
 
   function handleDelete(id: string) {
+    const deleted = injections.find((i) => i.id === id);
     remove(id);
     setEditingId(null);
+    showToast("Entry deleted", deleted ? () => {
+      addEntry(deleted.site, deleted.date, deleted.id);
+      setToast(null);
+    } : undefined);
   }
 
   return (
@@ -210,6 +242,36 @@ export default function History() {
         <p className={`text-xs px-5 pb-3 ${importMessage.isError ? "text-red-400" : "text-emerald-400"}`}>
           {importMessage.text}
         </p>
+      )}
+
+      {conflicts.length > 0 && (
+        <div className="px-5 pb-4 space-y-2">
+          <p className="text-[11px] text-amber-400 uppercase tracking-widest font-medium">
+            Resolve conflicts
+          </p>
+          {conflicts.map((conflict) => (
+            <div
+              key={conflict.date}
+              className="rounded-2xl bg-amber-500/[0.06] border border-amber-500/20 p-3 space-y-2"
+            >
+              <p className="text-xs text-slate-400">{formatDate(conflict.date)}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleResolveConflict(conflict, false)}
+                  className="flex-1 py-2 rounded-xl text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] active:scale-[0.97] transition-all"
+                >
+                  Keep {siteLabel(conflict.current.site)}
+                </button>
+                <button
+                  onClick={() => handleResolveConflict(conflict, true)}
+                  className="flex-1 py-2 rounded-xl text-xs font-medium bg-white/[0.04] text-slate-300 border border-white/[0.08] active:scale-[0.97] transition-all"
+                >
+                  Use {siteLabel(conflict.imported.site)}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Injection list */}
@@ -265,6 +327,20 @@ export default function History() {
           </ul>
         )}
       </div>
+
+      {toast && (
+        <div className="flash-enter fixed bottom-24 left-4 right-4 max-w-sm mx-auto flex items-center justify-between py-3 px-4 rounded-2xl text-sm font-medium backdrop-blur-sm bg-white/[0.06] text-slate-300 border border-white/[0.08]">
+          <span>{toast.message}</span>
+          {toast.undo && (
+            <button
+              onClick={toast.undo}
+              className="ml-3 text-indigo-400 font-semibold text-xs uppercase tracking-wide shrink-0"
+            >
+              Undo
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
