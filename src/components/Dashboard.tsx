@@ -37,7 +37,7 @@ function ThighDiagram({ suggested }: { suggested: InjectionSite | null }) {
   const rightColors = siteColors.right;
 
   return (
-    <svg width="160" height="180" viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="140" height="155" viewBox="0 0 160 180" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Left thigh */}
       <path
         d="M30 10 C30 10, 20 60, 22 100 C24 140, 30 170, 35 175 L55 175 C58 170, 68 140, 70 100 C72 60, 72 10, 72 10 Z"
@@ -97,7 +97,7 @@ export default function Dashboard() {
     : null;
 
   return (
-    <div className="flex flex-col items-center justify-center gap-6 px-6 py-8 h-full">
+    <div className="flex flex-col items-center justify-center gap-5 px-6 py-4 h-full">
       {/* Last injection card */}
       <div className="w-full max-w-xs">
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 text-center">
