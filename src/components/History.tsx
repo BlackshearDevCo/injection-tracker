@@ -151,9 +151,9 @@ export default function History() {
       const { error } = importData(reader.result as string);
       if (error) setImportError(error);
       else setImportError(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     };
     reader.readAsText(file);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function handleSave(id: string, updates: Partial<Omit<Injection, "id">>) {
@@ -195,7 +195,7 @@ export default function History() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".json"
+          accept=".json,application/json,text/plain"
           onChange={handleImport}
           className="hidden"
         />
