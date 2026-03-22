@@ -7,7 +7,7 @@ function formatDate(dateStr: string): string {
   const date = new Date(year, month - 1, day);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  const diff = Math.round((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
   if (diff === 0) return "Today";
   if (diff === 1) return "Yesterday";
@@ -76,16 +76,23 @@ function ThighDiagram({ lastSite, suggested }: { lastSite: InjectionSite | null;
 }
 
 export default function Dashboard() {
-  const { latest, add } = useInjections();
-  const [flash, setFlash] = useState<{ message: string; type: "success" | "warning" } | null>(null);
+  const { latest, checkDuplicate, add } = useInjections();
+  const [flash, setFlash] = useState<{ message: string; type: "success" } | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<{ site: InjectionSite; existingSite: string } | null>(null);
 
   function handleLog(site: InjectionSite) {
-    const { warning } = add(site);
-    if (warning) {
-      setFlash({ message: warning, type: "warning" });
-    } else {
-      setFlash({ message: `Logged ${siteLabel(site)}`, type: "success" });
+    const existing = checkDuplicate();
+    if (existing) {
+      setPendingConfirm({ site, existingSite: existing.site });
+      return;
     }
+    commitLog(site);
+  }
+
+  function commitLog(site: InjectionSite) {
+    add(site);
+    setPendingConfirm(null);
+    setFlash({ message: `Logged ${siteLabel(site)}`, type: "success" });
     setTimeout(() => setFlash(null), 3000);
   }
 
@@ -146,15 +153,32 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Duplicate confirmation */}
+      {pendingConfirm && (
+        <div className="flash-enter fixed bottom-24 left-4 right-4 max-w-sm mx-auto py-3 px-4 rounded-2xl text-sm backdrop-blur-sm bg-amber-500/10 text-amber-300 border border-amber-500/20">
+          <p className="text-center font-medium">
+            Already logged {pendingConfirm.existingSite} thigh today
+          </p>
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={() => commitLog(pendingConfirm.site)}
+              className="flex-1 py-2 rounded-xl text-xs font-semibold bg-amber-500/20 text-amber-200 border border-amber-500/30 active:scale-[0.97] transition-all"
+            >
+              Log anyway
+            </button>
+            <button
+              onClick={() => setPendingConfirm(null)}
+              className="flex-1 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] text-slate-400 border border-white/[0.08] active:scale-[0.97] transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Flash message */}
-      {flash && (
-        <div
-          className={`flash-enter fixed bottom-24 left-4 right-4 max-w-sm mx-auto text-center py-3 px-4 rounded-2xl text-sm font-medium backdrop-blur-sm ${
-            flash.type === "warning"
-              ? "bg-amber-500/10 text-amber-300 border border-amber-500/20"
-              : "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20"
-          }`}
-        >
+      {flash && !pendingConfirm && (
+        <div className="flash-enter fixed bottom-24 left-4 right-4 max-w-sm mx-auto text-center py-3 px-4 rounded-2xl text-sm font-medium backdrop-blur-sm bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
           {flash.message}
         </div>
       )}

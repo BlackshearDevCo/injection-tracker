@@ -27,10 +27,19 @@ function siteLabel(site: InjectionSite): string {
 function SiteDot({ site }: { site: InjectionSite }) {
   return (
     <span
-      className={`inline-block w-2 h-2 rounded-full ${
-        site === "left" ? "bg-violet-400" : "bg-cyan-400"
+      className={`inline-block w-2.5 h-2.5 rounded-full ${
+        site === "left" ? "bg-orange-400" : "bg-sky-400"
       }`}
     />
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
   );
 }
 
@@ -229,7 +238,7 @@ export default function History() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setEditingId(injection.id)}
                       className="text-xs text-slate-500 hover:text-indigo-400 px-2.5 py-1.5 rounded-lg transition-colors"
@@ -238,9 +247,9 @@ export default function History() {
                     </button>
                     <button
                       onClick={() => handleDelete(injection.id)}
-                      className="text-xs text-slate-500 hover:text-red-400 px-2.5 py-1.5 rounded-lg transition-colors"
+                      className="p-1.5 rounded-lg text-red-400/60 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                     >
-                      Delete
+                      <TrashIcon />
                     </button>
                   </div>
                 </li>

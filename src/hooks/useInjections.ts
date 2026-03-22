@@ -22,7 +22,8 @@ function generateId(): string {
 }
 
 function getTodayDate(): string {
-  return new Date().toISOString().split("T")[0];
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function subscribe(callback: () => void): () => void {
@@ -49,21 +50,18 @@ export function useInjections() {
 
   const latest = sorted[0] ?? null;
 
+  const checkDuplicate = useCallback((): Injection | null => {
+    const today = getTodayDate();
+    const current = getStoredInjections();
+    return current.find((i) => i.date === today) ?? null;
+  }, []);
+
   const add = useCallback(
-    (site: InjectionSite): { warning?: string } => {
+    (site: InjectionSite): void => {
       const today = getTodayDate();
       const current = getStoredInjections();
-      const existingToday = current.find((i) => i.date === today);
-
       const entry: Injection = { id: generateId(), date: today, site };
       saveInjections([...current, entry]);
-
-      if (existingToday) {
-        return {
-          warning: `You already logged an injection today (${existingToday.site} thigh). A second entry has been added.`,
-        };
-      }
-      return {};
     },
     []
   );
@@ -100,5 +98,5 @@ export function useInjections() {
     }
   }, []);
 
-  return { injections: sorted, latest, add, update, remove, exportData, importData };
+  return { injections: sorted, latest, checkDuplicate, add, update, remove, exportData, importData };
 }
