@@ -128,24 +128,27 @@ export default function Dashboard() {
           {(["left", "right"] as const).map((site) => {
             const isSuggested = suggested === site;
             const dotColor = site === "left" ? "bg-orange-400" : "bg-sky-400";
+            const borderColor = isSuggested
+              ? site === "left"
+                ? "border-orange-400/40"
+                : "border-sky-400/40"
+              : "border-white/[0.08]";
             return (
               <button
                 key={site}
                 onClick={() => handleLog(site)}
-                className={`flex-1 py-4 rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${
-                  isSuggested
-                    ? site === "left"
-                      ? "bg-orange-500/90 text-white shadow-lg shadow-orange-500/20 pulse-glow"
-                      : "bg-sky-500/90 text-white shadow-lg shadow-sky-500/20 pulse-glow"
-                    : "bg-white/[0.04] text-slate-400 border border-white/[0.08] hover:bg-white/[0.06]"
+                className={`flex-1 py-4 rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-[0.97] bg-white/[0.04] border ${borderColor} ${
+                  isSuggested ? "text-slate-200" : "text-slate-400"
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isSuggested ? "bg-white/60" : dotColor}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
                   {site === "left" ? "Left" : "Right"}
                 </span>
                 {isSuggested && (
-                  <span className="block text-[10px] font-medium mt-0.5 opacity-75">
+                  <span className={`block text-[10px] font-medium mt-0.5 ${
+                    site === "left" ? "text-orange-400/60" : "text-sky-400/60"
+                  }`}>
                     Suggested
                   </span>
                 )}
