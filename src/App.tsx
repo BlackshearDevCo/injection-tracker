@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Dashboard from "./components/Dashboard";
 import History from "./components/History";
 
@@ -25,6 +25,34 @@ function HistoryIcon({ active }: { active: boolean }) {
 
 export default function App() {
   const [view, setView] = useState<View>("log");
+  const [animating, setAnimating] = useState(false);
+  const [displayedView, setDisplayedView] = useState<View>("log");
+  const [slideClass, setSlideClass] = useState("");
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  function handleNav(next: View) {
+    if (next === view || animating) return;
+
+    const direction = next === "history" ? "left" : "right";
+
+    // Slide current view out
+    setSlideClass(`slide-out-${direction}`);
+    setAnimating(true);
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+    timeoutRef.current = setTimeout(() => {
+      // Swap content and slide new view in
+      setDisplayedView(next);
+      setSlideClass(`slide-in-${direction}`);
+
+      timeoutRef.current = setTimeout(() => {
+        setSlideClass("");
+        setAnimating(false);
+        setView(next);
+      }, 120);
+    }, 120);
+  }
 
   const tabs = [
     { id: "log" as const, label: "Log", Icon: LogIcon },
@@ -34,7 +62,9 @@ export default function App() {
   return (
     <div className="flex flex-col h-full w-full max-w-lg mx-auto">
       <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        {view === "log" ? <Dashboard /> : <History />}
+        <div className={`flex-1 min-h-0 flex flex-col ${slideClass}`}>
+          {displayedView === "log" ? <Dashboard /> : <History />}
+        </div>
       </main>
 
       <nav className="flex border-t border-white/5 bg-[#0c0f1a]/95 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0c0f1a]/80 pb-[env(safe-area-inset-bottom)]">
@@ -43,7 +73,7 @@ export default function App() {
           return (
             <button
               key={tab.id}
-              onClick={() => setView(tab.id)}
+              onClick={() => handleNav(tab.id)}
               className={`flex-1 flex flex-col items-center gap-1 pt-2.5 pb-2 transition-colors ${
                 isActive ? "text-indigo-400" : "text-slate-500"
               }`}
