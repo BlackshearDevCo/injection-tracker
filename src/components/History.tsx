@@ -148,15 +148,17 @@ export default function History() {
     if (!file) return;
     try {
       const text = await file.text();
+      console.log("[import] file:", file.name, "size:", file.size, "chars:", text.length);
+      console.log("[import] first 200 chars:", text.slice(0, 200));
       const { error, count } = importData(text);
       if (error) {
         setImportMessage({ text: error, isError: true });
       } else {
-        setImportMessage({ text: `Imported ${count} entries`, isError: false });
-        setTimeout(() => setImportMessage(null), 3000);
+        setImportMessage({ text: `Imported ${count} entries from ${file.name}`, isError: false });
+        setTimeout(() => setImportMessage(null), 5000);
       }
-    } catch {
-      setImportMessage({ text: "Failed to read file", isError: true });
+    } catch (err) {
+      setImportMessage({ text: `Failed to read file: ${err}`, isError: true });
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   }

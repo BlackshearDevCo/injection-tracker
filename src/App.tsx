@@ -32,8 +32,8 @@ export default function App() {
   ];
 
   return (
-    <div className="flex flex-col h-full max-w-lg mx-auto">
-      <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
+    <div className="flex flex-col h-full w-full max-w-lg mx-auto">
+      <main className="flex-1 min-h-0 overflow-hidden">
         {view === "log" ? <Dashboard /> : <History />}
       </main>
 
