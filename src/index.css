@@ -3,10 +3,14 @@
 @tailwind utilities;
 
 html, body, #root {
-  height: 100dvh;
-  height: 100vh; /* fallback for older browsers */
+  height: 100vh;
   height: 100dvh;
   overflow: hidden;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
 }
 
 body {

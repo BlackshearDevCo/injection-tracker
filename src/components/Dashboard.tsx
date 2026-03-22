@@ -97,7 +97,7 @@ export default function Dashboard() {
     : null;
 
   return (
-    <div className="flex flex-col items-center justify-center gap-5 px-6 py-4 h-full">
+    <div className="flex flex-col items-center justify-center gap-5 px-6 py-4 flex-1 min-h-0">
       {/* Last injection card */}
       <div className="w-full max-w-xs">
         <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 text-center">

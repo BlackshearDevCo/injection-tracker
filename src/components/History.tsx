@@ -129,7 +129,7 @@ function EditRow({
 export default function History() {
   const { injections, update, remove, exportData, importData } = useInjections();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [importError, setImportError] = useState<string | null>(null);
+  const [importMessage, setImportMessage] = useState<{ text: string; isError: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleExport() {
@@ -143,17 +143,22 @@ export default function History() {
     URL.revokeObjectURL(url);
   }
 
-  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const { error } = importData(reader.result as string);
-      if (error) setImportError(error);
-      else setImportError(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    };
-    reader.readAsText(file);
+    try {
+      const text = await file.text();
+      const { error, count } = importData(text);
+      if (error) {
+        setImportMessage({ text: error, isError: true });
+      } else {
+        setImportMessage({ text: `Imported ${count} entries`, isError: false });
+        setTimeout(() => setImportMessage(null), 3000);
+      }
+    } catch {
+      setImportMessage({ text: "Failed to read file", isError: true });
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function handleSave(id: string, updates: Partial<Omit<Injection, "id">>) {
@@ -167,7 +172,7 @@ export default function History() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Header */}
       <div className="px-5 pt-6 pb-3">
         <h2 className="text-lg font-semibold text-slate-100">History</h2>
@@ -201,8 +206,10 @@ export default function History() {
         />
       </div>
 
-      {importError && (
-        <p className="text-xs text-red-400 px-5 pb-3">{importError}</p>
+      {importMessage && (
+        <p className={`text-xs px-5 pb-3 ${importMessage.isError ? "text-red-400" : "text-emerald-400"}`}>
+          {importMessage.text}
+        </p>
       )}
 
       {/* Injection list */}

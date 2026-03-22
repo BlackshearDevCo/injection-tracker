@@ -82,7 +82,7 @@ export function useInjections() {
     return JSON.stringify(getStoredInjections(), null, 2);
   }, []);
 
-  const importData = useCallback((json: string): { error?: string } => {
+  const importData = useCallback((json: string): { error?: string; count?: number } => {
     try {
       const parsed = JSON.parse(json);
       if (!Array.isArray(parsed)) return { error: "Invalid format: expected an array" };
@@ -92,7 +92,7 @@ export function useInjections() {
         }
       }
       saveInjections(parsed);
-      return {};
+      return { count: parsed.length };
     } catch {
       return { error: "Invalid JSON" };
     }
