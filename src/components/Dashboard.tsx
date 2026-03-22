@@ -20,6 +20,10 @@ function formatDate(dateStr: string): string {
   });
 }
 
+function formatIso(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function siteLabel(site: InjectionSite): string {
   return site === "left" ? "Left Thigh" : "Right Thigh";
 }
@@ -74,12 +78,16 @@ function ThighDiagram({ suggested }: { suggested: InjectionSite | null }) {
 export default function Dashboard() {
   const { latest, checkDuplicate, add } = useInjections();
   const [flash, setFlash] = useState<{ message: string; type: "success" } | null>(null);
-  const [pendingConfirm, setPendingConfirm] = useState<{ site: InjectionSite; existingSite: string } | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<{ site: InjectionSite; message: string } | null>(null);
 
   function handleLog(site: InjectionSite) {
     const existing = checkDuplicate();
     if (existing) {
-      setPendingConfirm({ site, existingSite: existing.site });
+      setPendingConfirm({ site, message: `Already logged ${existing.site} thigh today` });
+      return;
+    }
+    if (suggested && site !== suggested) {
+      setPendingConfirm({ site, message: `Last injection was also ${site} thigh` });
       return;
     }
     commitLog(site);
@@ -96,16 +104,30 @@ export default function Dashboard() {
     ? latest.site === "left" ? "right" : "left"
     : null;
 
+  const isToday = latest?.date === formatIso(new Date());
+
   return (
     <div className="flex flex-col items-center justify-center gap-5 px-6 py-4 flex-1 min-h-0">
       {/* Last injection card */}
       <div className="w-full max-w-xs">
-        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] p-5 text-center">
+        <div className={`rounded-2xl p-5 text-center ${
+          isToday
+            ? "bg-emerald-500/[0.06] border border-emerald-500/20"
+            : "bg-white/[0.03] border border-white/[0.06]"
+        }`}>
           {latest ? (
             <>
               <p className="text-[11px] text-slate-500 uppercase tracking-widest font-medium">Last injection</p>
               <p className="text-xl font-semibold text-slate-100 mt-2">{siteLabel(latest.site)}</p>
-              <p className="text-sm text-slate-400 mt-1">{formatDate(latest.date)}</p>
+              <div className="flex items-center justify-center gap-2 mt-1">
+                <p className="text-sm text-slate-400">{formatDate(latest.date)}</p>
+                {isToday && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full">
+                    <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                    Done
+                  </span>
+                )}
+              </div>
             </>
           ) : (
             <>
@@ -130,15 +152,15 @@ export default function Dashboard() {
             const dotColor = site === "left" ? "bg-orange-400" : "bg-sky-400";
             const borderColor = isSuggested
               ? site === "left"
-                ? "border-orange-400/40"
-                : "border-sky-400/40"
+                ? "border-orange-400/60"
+                : "border-sky-400/60"
               : "border-white/[0.08]";
             return (
               <button
                 key={site}
                 onClick={() => handleLog(site)}
-                className={`flex-1 py-4 rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-[0.97] border ${borderColor} ${
-                  isSuggested ? "bg-white/[0.08] text-slate-200" : "bg-white/[0.04] text-slate-400"
+                className={`flex-1 py-4 rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-[0.97] ${borderColor} ${
+                  isSuggested ? "border-2 bg-white/[0.08] text-slate-200" : "border bg-white/[0.04] text-slate-400"
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
@@ -162,7 +184,7 @@ export default function Dashboard() {
       {pendingConfirm && (
         <div className="flash-enter fixed bottom-24 left-4 right-4 max-w-sm mx-auto py-3 px-4 rounded-2xl text-sm backdrop-blur-sm bg-amber-500/10 text-amber-300 border border-amber-500/20">
           <p className="text-center font-medium">
-            Already logged {pendingConfirm.existingSite} thigh today
+            {pendingConfirm.message}
           </p>
           <div className="flex gap-2 mt-3">
             <button

@@ -43,9 +43,9 @@ export function useInjections() {
   const raw = useSyncExternalStore(subscribe, getSnapshot);
   const injections: Injection[] = JSON.parse(raw);
 
-  // Sorted newest first
+  // Sorted newest first; use id (timestamp-based) as tiebreaker for same-day entries
   const sorted = [...injections].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime() || b.id.localeCompare(a.id)
   );
 
   const latest = sorted[0] ?? null;
