@@ -1,28 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { Injection, InjectionSite, ImportConflict } from "../types";
 import { useInjections } from "../hooks/useInjections";
-
-function formatDate(dateStr: string): string {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff = Math.floor((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Yesterday";
-
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-  });
-}
-
-function siteLabel(site: InjectionSite): string {
-  return site === "left" ? "Left Thigh" : "Right Thigh";
-}
+import { formatDate, siteLabel } from "../utils";
 
 function SiteDot({ site }: { site: InjectionSite }) {
   return (

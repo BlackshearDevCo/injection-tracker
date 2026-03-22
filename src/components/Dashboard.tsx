@@ -1,32 +1,7 @@
 import { useState } from "react";
 import type { InjectionSite } from "../types";
 import { useInjections } from "../hooks/useInjections";
-
-function formatDate(dateStr: string): string {
-  const [year, month, day] = dateStr.split("-").map(Number);
-  const date = new Date(year, month - 1, day);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diff = Math.round((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (diff === 0) return "Today";
-  if (diff === 1) return "Yesterday";
-  if (diff < 7) return `${diff} days ago`;
-
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-  });
-}
-
-function formatIso(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function siteLabel(site: InjectionSite): string {
-  return site === "left" ? "Left Thigh" : "Right Thigh";
-}
+import { formatDate, siteLabel, todayIso } from "../utils";
 
 // Site colors: left = orange, right = sky
 const siteColors = {
@@ -104,7 +79,7 @@ export default function Dashboard() {
     ? latest.site === "left" ? "right" : "left"
     : null;
 
-  const isToday = latest?.date === formatIso(new Date());
+  const isToday = latest?.date === todayIso();
 
   return (
     <div className="flex flex-col items-center justify-center gap-5 px-6 py-4 flex-1 min-h-0">
