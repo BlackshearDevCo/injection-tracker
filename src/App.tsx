@@ -4,34 +4,55 @@ import History from "./components/History";
 
 type View = "log" | "history";
 
+function LogIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="16" />
+      <line x1="8" y1="12" x2="16" y2="12" />
+    </svg>
+  );
+}
+
+function HistoryIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8} strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
 export default function App() {
   const [view, setView] = useState<View>("log");
 
+  const tabs = [
+    { id: "log" as const, label: "Log", Icon: LogIcon },
+    { id: "history" as const, label: "History", Icon: HistoryIcon },
+  ];
+
   return (
     <div className="flex flex-col h-full max-w-lg mx-auto">
-      {/* Content */}
       <main className="flex-1 overflow-hidden">
         {view === "log" ? <Dashboard /> : <History />}
       </main>
 
-      {/* Bottom nav */}
-      <nav className="flex border-t border-slate-800 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/80 pb-[env(safe-area-inset-bottom)]">
-        {([
-          { id: "log" as const, label: "Log" },
-          { id: "history" as const, label: "History" },
-        ]).map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setView(tab.id)}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              view === tab.id
-                ? "text-sky-400"
-                : "text-slate-500"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <nav className="flex border-t border-white/5 bg-[#0c0f1a]/95 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0c0f1a]/80 pb-[env(safe-area-inset-bottom)]">
+        {tabs.map((tab) => {
+          const isActive = view === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setView(tab.id)}
+              className={`flex-1 flex flex-col items-center gap-1 pt-2.5 pb-2 transition-colors ${
+                isActive ? "text-indigo-400" : "text-slate-500"
+              }`}
+            >
+              <tab.Icon active={isActive} />
+              <span className="text-[11px] font-medium">{tab.label}</span>
+            </button>
+          );
+        })}
       </nav>
     </div>
   );
