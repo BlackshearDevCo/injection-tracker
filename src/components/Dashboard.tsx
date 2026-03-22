@@ -137,8 +137,8 @@ export default function Dashboard() {
               <button
                 key={site}
                 onClick={() => handleLog(site)}
-                className={`flex-1 py-4 rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-[0.97] bg-white/[0.04] border ${borderColor} ${
-                  isSuggested ? "text-slate-200" : "text-slate-400"
+                className={`flex-1 py-4 rounded-2xl text-sm font-semibold transition-all duration-200 active:scale-[0.97] border ${borderColor} ${
+                  isSuggested ? "bg-white/[0.08] text-slate-200" : "bg-white/[0.04] text-slate-400"
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
